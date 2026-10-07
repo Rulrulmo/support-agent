@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: support-agent
+  threads:
+    virtual:
+      enabled: true          # LLM 스트리밍·툴 대기가 길다
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/support}
+    username: ${DB_USER:support}
+    password: ${DB_PASSWORD:support}
+  ai:
+    openai:                  # 모든 LLM 호출은 LiteLLM을 거친다 (deploy/compose/litellm/config.yaml의 용도 이름)
+      base-url: ${LLM_GATEWAY_URL:http://localhost:4000/v1}
+      api-key: ${LLM_GATEWAY_KEY:sk-local-dev}
+      embedding:
+        options:
+          model: embed
+          dimensions: 1024   # 청크 embedding 컬럼과 같아야 한다
+
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}   # 인증이 없으므로 이 PC에서만 연다
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

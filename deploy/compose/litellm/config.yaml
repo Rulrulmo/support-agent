@@ -1,0 +1,22 @@
+# 용도 이름 → 실제 모델. 모델을 바꿀 때는 여기만 고친다
+model_list:
+  - model_name: answer            # 답변·툴 호출
+    litellm_params: { model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY }
+  - model_name: wiki              # 위키 컴파일·린트 (긴 원본을 읽고 쓴다)
+    litellm_params: { model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY }
+  - model_name: fast              # 분류·질의 재작성 같은 짧은 일
+    litellm_params: { model: anthropic/claude-haiku-4-5-20251001, api_key: os.environ/ANTHROPIC_API_KEY }
+  - model_name: answer-gpt        # 벤더 비교
+    litellm_params: { model: openai/gpt-5.5, api_key: os.environ/OPENAI_API_KEY }
+  - model_name: judge             # 평가 채점: 답변과 다른 벤더
+    litellm_params: { model: openai/gpt-5.5, api_key: os.environ/OPENAI_API_KEY }
+  - model_name: embed             # 1024차원으로 받는다 (pgvector 컬럼과 같아야 한다). 한국어 질문 ↔ 영어 원본
+    litellm_params: { model: openai/text-embedding-3-large, api_key: os.environ/OPENAI_API_KEY }
+
+# 벤더 폴백은 두지 않는다: 평가 중 답변 모델이 judge와 같은 벤더로 몰래 바뀌면 자기 채점이 된다
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+litellm_settings:
+  drop_params: true

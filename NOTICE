@@ -1,0 +1,9 @@
+support-agent
+
+This project uses the Apache Guacamole manual as its demo knowledge source:
+  https://github.com/apache/guacamole-manual (tag 1.6.0)
+  Copyright The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+The manual is downloaded at runtime and is not redistributed in this repository.
+Wiki pages and evaluation references derived from it are summaries and translations of that work.
