@@ -1,6 +1,7 @@
 package dev.rulmo.supportagent.eval;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,7 +20,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import dev.rulmo.supportagent.agent.AnswerService;
-import dev.rulmo.supportagent.knowledge.SearchHit;
+import dev.rulmo.supportagent.llm.LlmOptions;
+import dev.rulmo.supportagent.wiki.WikiSearch;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -64,10 +66,11 @@ class AnswerEvaluation {
 		}
 	}
 
-	List<Result> run(int sample) throws InterruptedException {
+	/** @param wiki 위키를 쓸지 (NONE = 원본만, UNREVIEWED = 검수 전 draft까지: 결과에 그렇게 적는다) */
+	List<Result> run(int sample, WikiSearch.Use wiki) throws InterruptedException {
 		var items = EvalSet.load(json, file).sample(sample);
 		try (var pool = Executors.newFixedThreadPool(CONCURRENCY, Thread.ofVirtual().factory())) {
-			List<Future<Result>> futures = items.stream().map(it -> pool.submit(() -> evaluate(it))).toList();
+			List<Future<Result>> futures = items.stream().map(it -> pool.submit(() -> evaluate(it, wiki))).toList();
 			var out = new ArrayList<Result>();
 			for (var f : futures) {
 				try {
@@ -81,17 +84,17 @@ class AnswerEvaluation {
 		}
 	}
 
-	Result evaluate(EvalSet.Item it) {
+	Result evaluate(EvalSet.Item it, WikiSearch.Use wiki) {
 		try {
-			var a = answers.answer(it.question());
-			JsonNode v = judge(it, a.text(), a.context());
+			var a = answers.answer(it.question(), wiki);
+			JsonNode v = judge(it, a.text(), a.evidence());
 			int met = 0;
 			for (int i = 0; i < it.keyPoints().size(); i++) {
 				met += v.path("key_points").path(i).asBoolean(false) ? 1 : 0;
 			}
 			return new Result(it.id(), it.lang(), it.category(), it.difficulty(), it.expectedBehavior(), v.path("behavior").asString(""),
 					it.keyPoints().size(), met, strings(v.path("must_not")), strings(v.path("unsupported")), a.latencyMs(), a.text(),
-					a.cited().stream().map(SearchHit::url).toList(), v.path("reason").asString(""), null);
+					a.cited().stream().map(s -> s.kind().equals("wiki") ? "wiki:" + s.title() : s.url()).toList(), v.path("reason").asString(""), null);
 		}
 		catch (RuntimeException e) {
 			return new Result(it.id(), it.lang(), it.category(), it.difficulty(), it.expectedBehavior(), "", it.keyPoints().size(), 0,
@@ -99,16 +102,21 @@ class AnswerEvaluation {
 		}
 	}
 
-	private JsonNode judge(EvalSet.Item it, String answer, List<SearchHit> context) {
+	/** judge는 원본 글만 본다 (위키 본문이 아니라 위키가 인용한 원본): 위키의 잘못도 근거 없는 주장으로 잡힌다 */
+	private JsonNode judge(EvalSet.Item it, String answer, List<String> evidence) {
 		var sb = new StringBuilder("<question>\n").append(it.question()).append("\n</question>\n<expected_key_points>\n");
 		for (int i = 0; i < it.keyPoints().size(); i++) {
 			sb.append(i + 1).append(". ").append(it.keyPoints().get(i)).append('\n');
 		}
 		sb.append("</expected_key_points>\n<must_not>\n");
 		it.mustNot().forEach(m -> sb.append("- ").append(m).append('\n'));
-		sb.append("</must_not>\n").append(AnswerService.documents(context)).append("\n<answer>\n").append(answer).append("\n</answer>");
+		sb.append("</must_not>\n<documents>\n");
+		for (int i = 0; i < evidence.size(); i++) {
+			sb.append("<document index=\"").append(i + 1).append("\">\n").append(evidence.get(i)).append("\n</document>\n");
+		}
+		sb.append("</documents>\n<answer>\n").append(answer).append("\n</answer>");
 		String out = chat.call(new Prompt(List.of(new SystemMessage(judgePrompt), new UserMessage(sb.toString())),
-				chat.getOptions().mutate().model(judgeModel).build())).getResult().getOutput().getText();
+				LlmOptions.of(chat, judgeModel, null, Duration.ofMinutes(3)))).getResult().getOutput().getText();
 		int from = out == null ? -1 : out.indexOf('{');
 		int to = out == null ? -1 : out.lastIndexOf('}');
 		if (from < 0 || to < from) {

@@ -24,8 +24,11 @@ class EvalController {
 
 	/** 답변 평가 (judge 채점). 문항·결과 전체를 돌려주므로 curl -o로 저장해서 본다. 전체 60문항 약 $2 */
 	@PostMapping("/answers")
-	Map<String, Object> answers(@RequestParam(defaultValue = "0") int sample) throws InterruptedException {
-		return AnswerEvaluation.summarize(answers.run(sample));
+	Map<String, Object> answers(@RequestParam(defaultValue = "0") int sample,
+			@RequestParam(defaultValue = "NONE") dev.rulmo.supportagent.wiki.WikiSearch.Use wiki) throws InterruptedException {
+		var s = AnswerEvaluation.summarize(answers.run(sample, wiki));
+		s.put("wiki", wiki);   // UNREVIEWED면 검수 전 위키로 잰 것
+		return s;
 	}
 
 	@PostMapping("/retrieval")

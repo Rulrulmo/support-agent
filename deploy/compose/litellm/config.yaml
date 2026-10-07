@@ -3,7 +3,8 @@ model_list:
   - model_name: answer            # 답변·툴 호출
     litellm_params: { model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY }
   - model_name: wiki              # 위키 컴파일·린트 (긴 원본을 읽고 쓴다)
-    litellm_params: { model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY }
+    # 생각(extended thinking)을 끈다: 계획 같은 큰 작업에서 출력 한도를 생각에 다 써서 본문이 비었다 (2026-10-07)
+    litellm_params: { model: anthropic/claude-sonnet-5, api_key: os.environ/ANTHROPIC_API_KEY, thinking: { type: disabled } }
   - model_name: fast              # 분류·질의 재작성 같은 짧은 일
     litellm_params: { model: anthropic/claude-haiku-4-5-20251001, api_key: os.environ/ANTHROPIC_API_KEY }
   - model_name: answer-gpt        # 벤더 비교

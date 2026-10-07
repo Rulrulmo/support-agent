@@ -38,7 +38,7 @@ class AnswerEvaluationTest {
 				{"id":"en-1","lang":"en","question":"Q3","category":"인증","difficulty":"hard","expected_key_points":["a"],"must_not":[],"sources":[],"expected_behavior":"answer"}
 				""");
 		var answers = mock(AnswerService.class);
-		when(answers.answer(anyString())).thenAnswer(inv -> new AnswerService.Answer("답 " + inv.getArgument(0), List.of(), List.of(), 1200));
+		when(answers.answer(anyString(), org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> new AnswerService.Answer("답 " + inv.getArgument(0), List.of(), List.of("근거"), 1200));
 		var verdicts = Map.of(
 				"Q1", "```json\n{\"key_points\":[true,true],\"must_not\":[],\"behavior\":\"answer\",\"unsupported\":[]}\n```",   // 코드 울타리도 읽는다
 				"Q2", "{\"key_points\":[true],\"must_not\":[],\"behavior\":\"answer\",\"unsupported\":[{\"claim\":\"지어낸 값\"}]}",   // 되묻지 않았고 환각
@@ -47,7 +47,7 @@ class AnswerEvaluationTest {
 			.filter(e -> p.getUserMessage().getText().contains("<question>\n" + e.getKey() + "\n")).findFirst().orElseThrow().getValue()))));
 
 		var eval = new AnswerEvaluation(answers, judge, JsonMapper.builder().build(), file.toString(), "judge", new ClassPathResource("prompts/judge.md"));
-		var s = AnswerEvaluation.summarize(eval.run(0));
+		var s = AnswerEvaluation.summarize(eval.run(0, dev.rulmo.supportagent.wiki.WikiSearch.Use.NONE));
 
 		assertThat(s.get("all")).isEqualTo(Map.of("n", 2, "correct%", 100.0, "keyPoints%", 100.0, "hallucination%", 50.0, "behavior%", 50.0));
 		assertThat(s.get("hallucinated")).isEqualTo(List.of("ko-2"));

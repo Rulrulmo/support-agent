@@ -26,6 +26,12 @@ knowledge:
   search:
     keyword-weight: 0        # 하이브리드에서 키워드 비중 (벡터 = 1). v0 측정: 0이 가장 좋다 (1.0이면 @1 77.6 → 65.3%). docs/PLAN.md §5
 
+agent:
+  wiki: PUBLISHED            # 답변에 위키를 쓸지: NONE | PUBLISHED(검수 통과만, 운영) | UNREVIEWED(검수 전 draft까지, 실험)
+
+wiki:
+  model: wiki                # LiteLLM 용도 이름 (페이지 계획·작성)
+
 eval:
   file: ${EVAL_FILE:../docs/eval/v0.jsonl}
 
