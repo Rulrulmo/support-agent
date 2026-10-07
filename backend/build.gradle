@@ -33,6 +33,7 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai'   // LiteLLM이 OpenAI 호환 API를 연다
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
+	implementation 'org.jsoup:jsoup:1.21.1'   // 발행된 매뉴얼 HTML → 절 단위 글
 	runtimeOnly 'org.postgresql:postgresql'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

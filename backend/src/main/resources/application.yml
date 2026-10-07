@@ -17,6 +17,15 @@ spring:
           model: embed
           dimensions: 1024   # 청크 embedding 컬럼과 같아야 한다
 
+knowledge:
+  source:                    # 데모 원본: Apache Guacamole 매뉴얼 (Apache-2.0, NOTICE). 발행본을 버전 고정으로 받는다
+    name: guacamole-manual
+    version: "1.6.0"
+    base-url: https://guacamole.apache.org/doc/1.6.0/gug/
+
+eval:
+  file: ${EVAL_FILE:../docs/eval/v0.jsonl}
+
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}   # 인증이 없으므로 이 PC에서만 연다
 
