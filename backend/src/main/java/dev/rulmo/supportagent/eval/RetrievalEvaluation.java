@@ -38,13 +38,15 @@ class RetrievalEvaluation {
 	record Result(String id, String lang, String category, String difficulty, Integer rank) {
 	}
 
-	List<Result> run(KnowledgeSearch.Mode mode, int sample) {
+	/** @param keywordWeight null이면 설정값 */
+	List<Result> run(KnowledgeSearch.Mode mode, int sample, Double keywordWeight) {
 		var out = new ArrayList<Result>();
 		for (var it : EvalSet.load(json, file).sample(sample)) {
 			if (it.sources().isEmpty()) {
 				continue;
 			}
-			out.add(new Result(it.id(), it.lang(), it.category(), it.difficulty(), rank(search.search(it.question(), K, mode), it.sources())));
+			var hits = keywordWeight == null ? search.search(it.question(), K, mode) : search.search(it.question(), K, mode, keywordWeight);
+			out.add(new Result(it.id(), it.lang(), it.category(), it.difficulty(), rank(hits, it.sources())));
 		}
 		return out;
 	}

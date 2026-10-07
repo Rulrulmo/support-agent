@@ -23,6 +23,9 @@ knowledge:
     version: "1.6.0"
     base-url: https://guacamole.apache.org/doc/1.6.0/gug/
 
+  search:
+    keyword-weight: 0        # 하이브리드에서 키워드 비중 (벡터 = 1). v0 측정: 0이 가장 좋다 (1.0이면 @1 77.6 → 65.3%). docs/PLAN.md §5
+
 eval:
   file: ${EVAL_FILE:../docs/eval/v0.jsonl}
 

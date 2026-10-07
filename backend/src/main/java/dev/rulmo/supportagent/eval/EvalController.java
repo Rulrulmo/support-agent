@@ -21,7 +21,8 @@ class EvalController {
 	}
 
 	@PostMapping("/retrieval")
-	Map<String, Object> retrieval(@RequestParam(defaultValue = "HYBRID") KnowledgeSearch.Mode mode, @RequestParam(defaultValue = "0") int sample) {
-		return RetrievalEvaluation.summarize(retrieval.run(mode, sample));
+	Map<String, Object> retrieval(@RequestParam(defaultValue = "HYBRID") KnowledgeSearch.Mode mode, @RequestParam(defaultValue = "0") int sample,
+			@RequestParam(required = false) Double keywordWeight) {
+		return RetrievalEvaluation.summarize(retrieval.run(mode, sample, keywordWeight));
 	}
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 /**
  * 원본 검색: 영어 전문 검색 + 벡터를 RRF로 합친다.
  * 원본이 영어라 한국어 질문은 키워드 쪽에서 영어 낱말(RDP, LDAP, guacd …)만 쓰이고, 뜻은 벡터 쪽이 맞춘다.
+ * 평가셋 v0(2026-10-07)에서는 키워드를 섞을수록 나빠서 기본 비중은 0 (= 벡터만, 키워드 질의도 안 한다). docs/PLAN.md §5
  */
 @Service
 public class KnowledgeSearch {
@@ -41,7 +42,12 @@ public class KnowledgeSearch {
 	}
 
 	public List<SearchHit> search(String query, int k, Mode mode) {
-		List<Long> keyword = mode == Mode.VECTOR ? List.of() : store.keyword(terms(query), CANDIDATES);
+		return search(query, k, mode, keywordWeight);
+	}
+
+	/** @param keywordWeight 평가에서 비중을 바꿔 가며 잴 때 (재시작 없이) */
+	public List<SearchHit> search(String query, int k, Mode mode, double keywordWeight) {
+		List<Long> keyword = mode == Mode.VECTOR || mode == Mode.HYBRID && keywordWeight == 0 ? List.of() : store.keyword(terms(query), CANDIDATES);
 		List<Long> vector = mode == Mode.KEYWORD ? List.of() : store.vector(embeddings.embed(query), CANDIDATES);
 		Map<Long, Double> score = new HashMap<>();
 		for (int i = 0; i < keyword.size(); i++) {
